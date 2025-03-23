@@ -1,23 +1,163 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bacteria Detection</title>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-database.js"></script>
-    <link rel="stylesheet" href="styles.css">
+  <style>
+    body {
+        background-color: #F5F5F5;
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+    }
+    .data-container {
+        display: flex;
+        justify-content: space-between;
+        width: 50%;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #FFF;
+        box-shadow: 0 2px 20px rgba(0, 0, 0, 0.1);
+        border-radius: 10px;
+    }
+    .data-item {
+        text-align: center;
+    }
+    .data-item h2 {
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+    .data-item p {
+        font-size: 48px;
+        font-weight: bold;
+        color: #6EB7FF;
+    }
+    .data-head {
+        margin: auto;
+        width: 50%;
+        text-align: center;
+        font-size: 45px;
+        font-weight: bold;
+        margin: 50px auto;
+        padding: 20px;
+        background-color: #FFF;
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        border-radius: 20px;
+    }
+    #imgurImageContainer {
+        width: 50%;
+        margin: 30px auto;
+        text-align: center;
+    }
+    #imgurImage {
+        width: 100%;
+        max-width: 400px;
+        height: auto;
+        border-radius: 10px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+    }
+    .potability {
+        font-size: 32px;
+        font-weight: bold;
+        padding: 10px;
+        border-radius: 5px;
+    }
+    .safe {
+        color: green;
+    }
+    .unsafe {
+        color: red;
+    }
+  </style>
+  
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Coliform & E. coli Detector</title>
+
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-database.js"></script>
 </head>
 <body>
-    <h1>Bacteria Detection Results</h1>
-    <div class="container">
-        <img id="bacteriaImage" src="" alt="Latest Detection Image">
-        <p><strong>E. coli Count:</strong> <span id="ecoliCount">N/A</span></p>
-        <p><strong>Coliform Count:</strong> <span id="coliformCount">N/A</span></p>
-        <p><strong>Total Count:</strong> <span id="totalCount">N/A</span></p>
-        <p><strong>Potability:</strong> <span id="potability">N/A</span></p>
-        <p><strong>Timestamp:</strong> <span id="timestamp">N/A</span></p>
-    </div>
-    <script src="app.js"></script>
+    <section id="application">
+        <div class="data-head">Water Quality Detection</div>
+
+        <div class="data-container">
+            <div class="data-item">
+                <h2>E. coli Count</h2>
+                <p class="value" id="ecoli">Loading...</p>
+            </div>
+            <div class="data-item">
+                <h2>Total Coliform Count</h2>
+                <p class="value" id="coliform">Loading...</p>
+            </div>
+        </div>
+
+        <div class="data-container">
+            <div class="data-item">
+                <h2>Potability Status</h2>
+                <p class="potability" id="potability">Checking...</p>
+            </div>
+        </div>
+
+        <div id="imgurImageContainer">
+            <h2>Latest Detection Image</h2>
+            <img id="imgurImage" src="" alt="Loading Image...">
+        </div>
+    </section>
+
+    <script>
+        // Firebase Configuration (Original Firebase for E. coli Detection)
+        var firebaseConfig = {
+            apiKey: "AIzaSyBGPqzH7H2tBvuCoIDJcmq9ZxoGkPL1R10",
+            authDomain: "watpad.firebaseapp.com",
+            databaseURL: "https://watpad-default-rtdb.asia-southeast1.firebasedatabase.app/",
+            projectId: "watpad",
+            storageBucket: "watpad.firebasestorage.app",
+            messagingSenderId: "664783349089",
+            appId: "1:664783349089:web:7b28efdc2d9d062dddd120",
+            measurementId: "G-VL4S9SQG0P"
+        };
+        firebase.initializeApp(firebaseConfig);
+        var database = firebase.database();
+
+        // References to Firebase Data (Original Firebase Structure)
+        var ecoliRef = database.ref('EcoliDetection/EcoliCount');
+        var coliformRef = database.ref('EcoliDetection/ColiformCount');
+        var potabilityRef = database.ref('EcoliDetection/Potability');
+        var imgurRef = database.ref('EcoliDetection/ImageURL');
+
+        // Fetch E. coli Count
+        ecoliRef.on('value', function(snapshot) {
+            var ecoliCount = snapshot.val();
+            document.getElementById('ecoli').innerHTML = ecoliCount + " CFU";
+        });
+
+        // Fetch Total Coliform Count
+        coliformRef.on('value', function(snapshot) {
+            var coliformCount = snapshot.val();
+            document.getElementById('coliform').innerHTML = coliformCount + " CFU";
+        });
+
+        // Fetch Potability Status
+        potabilityRef.on('value', function(snapshot) {
+            var potability = snapshot.val();
+            var potabilityElement = document.getElementById('potability');
+            potabilityElement.innerHTML = potability;
+
+            // Change color based on status
+            if (potability.toLowerCase() === "safe") {
+                potabilityElement.classList.add("safe");
+                potabilityElement.classList.remove("unsafe");
+            } else {
+                potabilityElement.classList.add("unsafe");
+                potabilityElement.classList.remove("safe");
+            }
+        });
+
+        // Fetch & Display Imgur Image
+        imgurRef.on('value', function(snapshot) {
+            var imgUrl = snapshot.val();
+            document.getElementById('imgurImage').src = imgUrl || "https://via.placeholder.com/400";
+        });
+    </script>
 </body>
 </html>
